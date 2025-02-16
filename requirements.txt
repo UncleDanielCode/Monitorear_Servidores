@@ -1,2 +1,4 @@
 requests
 pythonping
+smtplib
+email

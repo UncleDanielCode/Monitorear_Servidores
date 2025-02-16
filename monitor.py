@@ -1,49 +1,60 @@
 import time
 from pythonping import ping
-from config import SERVIDORES
-from notificaciones import enviar_correo
+from config import (
+    SERVIDORES, 
+    TIEMPO_ESPERA_OK, 
+    TIEMPO_ESPERA_ADVERTENCIA, 
+    TIEMPO_ESPERA_CRITICO, 
+    TIEMPO_NOTIFICACION
+)
+from notificaciones import notificar_error
 
-servidores_fallidos = {}
+# Diccionario para almacenar el estado de cada servidor
+estado_servidores = {servidor: {"estado": "🟢", "ultima_alerta": 0} for servidor in SERVIDORES}
 
-def hacer_ping(servidor):
+def obtener_estado(servidor):
     """
-    Realiza un ping al servidor y devuelve True si responde, False si no.
+    Realiza un ping y determina el estado del servidor.
     """
     try:
         respuesta = ping(servidor, count=2, timeout=2)
-        return respuesta.success()
-    except Exception as e:
-        print(f"⚠️ Error al hacer ping a {servidor}: {e}")
-        return False
+        latencia = respuesta.rtt_avg_ms
+
+        if not respuesta.success():
+            return "🔴", "critico", f"Fallo de conexión con {servidor}."
+        elif latencia > 200:
+            return "🟡", "advertencia", f"Alta latencia en {servidor}: {latencia}ms"
+        else:
+            return "🟢", "ok", f"{servidor} responde correctamente."
+
+    except Exception:
+        return "🔴", "critico", f"Error crítico en {servidor}."
 
 def monitorear_servidores():
     """
-    Monitorea los servidores y envía alertas por correo cuando un servidor cae,
-    pero solo una vez por cada falla. Luego, espera 30 minutos antes de volver a intentarlo.
+    Ejecuta el monitoreo aplicando la lógica del semáforo.
     """
     print("🔍 Iniciando monitoreo de servidores...\n")
-    
+
     while True:
         for servidor in SERVIDORES:
+            estado_actual, nivel_error, detalle_error = obtener_estado(servidor)
             tiempo_actual = time.time()
-            
-            if servidor in servidores_fallidos:
-                tiempo_ultima_alerta = servidores_fallidos[servidor]
-                if tiempo_actual - tiempo_ultima_alerta < 1800:  
-                    print(f"⏳ {servidor} sigue caído. Próxima verificación en {int(1800 - (tiempo_actual - tiempo_ultima_alerta))} segundos.")
-                    continue
 
-            if hacer_ping(servidor):
-                print(f"✅ {servidor} responde correctamente.")
-                if servidor in servidores_fallidos:
-                    del servidores_fallidos[servidor]
-            else:
-                print(f"❌ ALERTA: {servidor} NO responde ⚠️")
-                if servidor not in servidores_fallidos:
-                    enviar_correo(servidor)
-                servidores_fallidos[servidor] = tiempo_actual
+            # Mostrar siempre el estado del servidor en consola
+            print(f"{estado_actual} {servidor}: {detalle_error}")
 
-        time.sleep(30)  
+            # Si cambia de estado o se cumple el tiempo de notificación, enviar alerta
+            if estado_actual != estado_servidores[servidor]["estado"] or (tiempo_actual - estado_servidores[servidor]["ultima_alerta"] > TIEMPO_NOTIFICACION):
+                notificar_error(servidor, nivel_error, detalle_error)
+                estado_servidores[servidor]["estado"] = estado_actual
+                estado_servidores[servidor]["ultima_alerta"] = tiempo_actual
 
+        time.sleep(TIEMPO_ESPERA_OK)  # Ajustar el tiempo de espera
+
+# Aseguramos que el script solo se ejecute si es el archivo principal
 if __name__ == "__main__":
-    monitorear_servidores()
+    try:
+        monitorear_servidores()
+    except KeyboardInterrupt:
+        print("\n🛑 Monitoreo detenido por el usuario.")
