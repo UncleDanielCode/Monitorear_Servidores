@@ -1,6 +1,3 @@
-Aquí tienes un **README.md** optimizado para la nueva rama `semaforo`, explicando la implementación del sistema de monitoreo de servidores con el **modelo de semáforo**.
-
----
 
 ### 📌 **README.md - Monitoreo de Servidores con Semáforo**
 ```markdown
@@ -113,4 +110,3 @@ git push origin semaforo
 ```
 📌 Luego ve a GitHub y verifica que el archivo se haya subido correctamente.
 
-💡 **Dime si quieres agregar algo más al README antes de subirlo.** 🚀
