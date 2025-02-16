@@ -99,14 +99,4 @@ git push origin nueva_mejora
 🚀 **Proyecto en desarrollo - Versión Beta 🚦**
 ```
 
----
-
-## 📌 **¿Qué sigue ahora?**
-✅ **Añade este archivo como `README.md` en la rama `semaforo`**  
-```sh
-git add README.md
-git commit -m "Añadido README con detalles del semáforo"
-git push origin semaforo
-```
-📌 Luego ve a GitHub y verifica que el archivo se haya subido correctamente.
 
