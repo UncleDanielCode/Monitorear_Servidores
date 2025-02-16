@@ -95,8 +95,5 @@ git push origin nueva_mejora
 
 📧 Para dudas, contacta al equipo de desarrollo.
 
----
-🚀 **Proyecto en desarrollo - Versión Beta 🚦**
-```
 
 
